@@ -1,0 +1,35 @@
+name: Train delay watch
+
+on:
+  schedule:
+    # Cron is in UTC. These windows cover both winter (UTC+1) and summer (UTC+2) time;
+    # the script itself decides whether a train is within 45 min and exits fast otherwise.
+    - cron: "7-59/10 3-7 * * 1-5"    # mornings
+    - cron: "7-59/10 12-15 * * 1-5"  # afternoons
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: What to run
+        type: choice
+        options: [check, test-notify, stations, watch]
+        default: check
+
+# Only one watcher at a time, so you never get duplicate notifications
+concurrency:
+  group: train-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run watcher
+        run: python commute.py ${{ inputs.mode || 'watch' }}
+        env:
+          TRV_API_KEY: ${{ secrets.TRV_API_KEY }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
