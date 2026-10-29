@@ -28,14 +28,16 @@ py commute.py test-notify   # your phone should buzz
 2. Repo → **Settings → Secrets and variables → Actions** → add `TRV_API_KEY` and `NTFY_TOPIC`.
 3. **Actions** tab → *Train delay watch* → **Run workflow** with mode `check`, then `test-notify`.
 
-From then on it runs by itself every weekday morning and afternoon.
+4. Scheduling is done by cron-job.org (GitHub's own scheduler skipped runs): four
+   weekday jobs at 05:45, 06:45, 15:09 and 16:09 (Europe/Stockholm) send
+   `POST https://api.github.com/repos/Zebbe45/train-watcher/actions/workflows/commute.yml/dispatches`
+   with body `{"ref":"main","inputs":{"mode":"watch"}}` and a fine-grained token
+   (this repo only, Actions: read and write). Renew the token before it expires.
 
 **Public or private repo?** A public repo gets unlimited free Actions minutes and your
 secrets stay hidden. A private repo is capped at 2,000 free minutes/month; this uses
 roughly 100–150 per weekday, so it would run out. Public is the easy choice.
 
-**Note:** GitHub pauses scheduled workflows in repos with no activity for 60 days.
-You'll get an email first; any commit (or clicking "Enable workflow") resets it.
 
 ## Configuration
 Edit the top of `commute.py`:

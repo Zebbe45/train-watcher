@@ -1,11 +1,9 @@
 name: Train delay watch
 
 on:
-  schedule:
-    # Cron is in UTC. These windows cover both winter (UTC+1) and summer (UTC+2) time;
-    # the script itself decides whether a train is within 45 min and exits fast otherwise.
-    - cron: "7-59/10 3-7 * * 1-5"    # mornings
-    - cron: "7-59/10 12-15 * * 1-5"  # afternoons
+  # Started by cron-job.org (05:45, 06:45, 15:09, 16:09 Europe/Stockholm, Mon-Fri)
+  # via the API, since GitHub's own scheduler was too unreliable. The script picks
+  # the right trains for odd/even weeks and exits fast when none is due.
   workflow_dispatch:
     inputs:
       mode:
