@@ -43,6 +43,7 @@ SCHEDULE = {
 STATION_OVERRIDES = {}
 
 LEAD_MINUTES = 45       # start watching this long before departure
+EARLY_START_MINUTES = 20  # if started up to this much before the window, wait for it
 POLL_SECONDS = 120      # how often to re-check while watching
 DELAY_THRESHOLD = 3     # minutes late before you get notified
 RENOTIFY_STEP = 3       # notify again if the delay changes by this much
@@ -304,12 +305,17 @@ def cmd_watch():
     if now.weekday() >= 5:
         log("Weekend, nothing to do")
         return
-    due = [t for t in todays_trips(now)
-           if t[2] - timedelta(minutes=LEAD_MINUTES) <= now <= t[2]]
+    lead = timedelta(minutes=LEAD_MINUTES)
+    early = timedelta(minutes=EARLY_START_MINUTES)
+    due = [t for t in todays_trips(now) if t[2] - lead - early <= now <= t[2]]
     if not due:
         log("No train within the watch window right now")
         return
     for orig, dest, dep_dt in due:
+        wait = (dep_dt - lead - datetime.now(TZ)).total_seconds()
+        if wait > 0:
+            log(f"Started early, waiting {wait / 60:.0f} min for the watch window")
+            time.sleep(wait)
         watch_trip(orig, dest, dep_dt)
 
 
